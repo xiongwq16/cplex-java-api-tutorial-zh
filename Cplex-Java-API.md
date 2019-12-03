@@ -14,6 +14,7 @@
     - [2.3 表达式 Expressions](#23-表达式-expressions)
         - [2.3.1 简介](#231-简介)
         - [2.3.2 子类 IloLinearNumExpr 常用函数](#232-子类-ilolinearnumexpr-常用函数)
+        - [2.3.3 代码示例](#233-代码示例)
     - [2.4 约束 Ranged constraints](#24-约束-ranged-constraints)
         - [2.4.1 添加约束](#241-添加约束)
             - [2.4.1.1 lb <= expr <= ub](#2411-lb--expr--ub)
@@ -23,7 +24,7 @@
     - [2.5 目标函数 Objective function](#25-目标函数-objective-function)
         - [2.5.1 常用函数](#251-常用函数)
     - [2.6 建模方式](#26-建模方式)
-        - [2.6.1 按行建模populateByRow](#261-按行建模populatebyrow)
+        - [2.6.1 按行建模 populateByRow](#261-按行建模-populatebyrow)
         - [2.6.2 按列建模populateByColumn](#262-按列建模populatebycolumn)
             - [2.6.2.1 过程](#2621-过程)
             - [2.6.2.2 代码示例](#2622-代码示例)
@@ -211,6 +212,52 @@
 ### 2.3.2 子类 IloLinearNumExpr 常用函数
 ![Expressions常用函数](./pictures/Expressions常用函数.png)
 
+<a id="233-代码示例"></a>
+### 2.3.3 代码示例
+
+```Java
+IloCplex vrptwModel = new IloCplex();
+IloNumVar[][][] x = new IloIntVar[vertexNum][vertexNum][vehNum];
+IloNumVar[][] s = new IloNumVar[vertexNum][vehNum];
+```
+
+1. VRPTW 中每个客户必须被访问一次：$\sum_{k \in K} \sum_{j \in J} x_{ijk} = 1 \quad (\forall i \in I)$
+```Java
+for (int k = 0; k < vehNum; k++) {
+    IloLinearNumExpr expr = vrptwModel.linearNumExpr();
+    for (int i = 0; i < vertexNum - 1; i++) {
+        if (isFeasibleArc[i][vertexNum - 1]) {
+            expr.addTerm(1, x[i][vertexNum - 1][k]);
+        }
+        
+    }
+    vrptwModel.addEq(expr, 1);
+}
+```
+
+
+2. VRPTW 中的时间窗约束：$s_{ik} + s_i + t_{ij} - s_{jk} - M(1 - x_{ijk}) \leq 0$
+```Java
+double bigm = Parameters.BIG_M;
+double[][] timeMatrix = vrptwIns.getTimeMatrix();
+for (int k = 0; k < vehNum; k++) {
+    for (int i = 0; i < vertexNum; i++) {
+        Vertex vi = vertexes.get(i);
+        for (int j = 0; j < vertexNum; j++) {
+            if (isFeasibleArc[i][j]) {
+                IloNumExpr expr1 = vrptwModel.sum(s[i][k], vi.getServiceTime() + timeMatrix[i][j]);
+                expr1 = vrptwModel.sum(expr1, vrptwModel.prod(-1, s[j][k]));
+                IloNumExpr expr2 = vrptwModel.prod(bigm, vrptwModel.sum(1, vrptwModel.prod(-1, x[i][j][k])));
+                vrptwModel.addLe(expr1, expr2);
+            }
+            
+        }
+        
+    }
+    
+}
+```
+
 
 <a id="24-约束-ranged-constraints"></a>
 ## 2.4 约束 Ranged constraints
@@ -262,8 +309,8 @@ IloRange rng = cplex.range(lb, expr, ub, name);
 <a id="26-建模方式"></a>
 ## 2.6 建模方式
 
-<a id="261-按行建模populatebyrow"></a>
-### 2.6.1 按行建模populateByRow
+<a id="261-按行建模-populatebyrow"></a>
+### 2.6.1 按行建模 populateByRow
 ```
 Input data:
 foodMin[j]          minimum amount of food j to use
