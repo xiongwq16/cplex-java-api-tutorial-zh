@@ -9,4 +9,5 @@ Cplex tutorial in Chinese, contains:
 
 ## License
 * The [code](examples) in examples directory is from IBM's Cplex official examples.
-* The content of this project(except the examples) is licensed under the [Attribution-NonCommercial 4.0 International](https://creativecommons.org/licenses/by-nc/4.0/).
+* The parameters references is from IBM's Cplex official documents.
+* The content of this project(except the examples and parameters references) is licensed under the [Attribution-NonCommercial 4.0 International](https://creativecommons.org/licenses/by-nc/4.0/).
